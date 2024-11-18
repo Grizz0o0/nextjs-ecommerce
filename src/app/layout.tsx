@@ -1,6 +1,7 @@
 // import type { Metadata } from 'next';
 import { Roboto } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 import { Metadata } from 'next';
 import Header from '@/components/header';
@@ -31,7 +32,8 @@ export default function RootLayout({
                     disableTransitionOnChange
                 >
                     <Header />
-                    {children}
+                    <main>{children}</main>
+                    <Toaster />
                 </ThemeProvider>
             </body>
         </html>

@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import {
     Form,
@@ -17,6 +17,8 @@ import { LoginBodyType, LoginBody } from '@/schemaValidations/auth.schema';
 import envConfig from '@/config';
 
 export default function LoginForm() {
+    const { toast } = useToast();
+
     const form = useForm<LoginBodyType>({
         resolver: zodResolver(LoginBody),
         defaultValues: {
@@ -27,7 +29,7 @@ export default function LoginForm() {
 
     async function onSubmit(values: LoginBodyType) {
         try {
-            const res = await fetch(
+            await fetch(
                 `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/v1/api/shop/login`,
                 {
                     body: JSON.stringify(values),
@@ -37,20 +39,43 @@ export default function LoginForm() {
                     },
                     method: 'POST',
                 }
-            );
+            ).then(async (res) => {
+                const payload = await res.json();
+                const data = {
+                    status: res.status,
+                    payload,
+                };
+                if (!res.ok) {
+                    throw data;
+                }
+                return data;
+            });
+            toast({
+                title: 'Login success !',
+                description: '',
+                className: 'bg-green-300 text-slate-50',
+            });
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (error: any) {
+            const payload = error.payload as {
+                code: number;
+                message: string;
+                stack: string;
+                status: string;
+            };
 
-            // Kiểm tra nếu phản hồi có trạng thái lỗi
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message);
-            }
-
-            // Nếu không có lỗi, lấy dữ liệu thành công
-            const data = await res.json();
-            console.log('Success:', data);
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                alert(error.message); // Hiển thị thông báo lỗi cho người dùng
+            if (payload?.status === 'error' && payload?.code === 401) {
+                form.setError('password', {
+                    type: 'server',
+                    message: 'Invalid email or password. Please try again!',
+                });
+            } else {
+                toast({
+                    title: 'Lỗi',
+                    description:
+                        error?.message || 'Đã xảy ra lỗi không xác định.',
+                    variant: 'destructive',
+                });
             }
         }
     }

@@ -2,6 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { useToast } from '@/hooks/use-toast';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -20,6 +21,8 @@ import {
 import envConfig from '@/config';
 
 export default function RegisterForm() {
+    const { toast } = useToast();
+
     const form = useForm<RegisterBodyType>({
         resolver: zodResolver(RegisterBody),
         defaultValues: {
@@ -32,7 +35,7 @@ export default function RegisterForm() {
 
     async function onSubmit(values: RegisterBodyType) {
         try {
-            const res = await fetch(
+            await fetch(
                 `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/v1/api/shop/signup`,
                 {
                     body: JSON.stringify(values),
@@ -42,18 +45,31 @@ export default function RegisterForm() {
                     },
                     method: 'POST',
                 }
-            );
-
-            // Kiểm tra nếu phản hồi có trạng thái lỗi
-
-            // Nếu không có lỗi, lấy dữ liệu thành công
-            const data = await res.json();
-            console.log('Success:', data);
-            if (!res.ok) {
-                throw data;
-            }
-        } catch (error) {
-            console.log(error);
+            ).then(async (res) => {
+                const payload = await res.json();
+                const data = {
+                    status: res.status,
+                    payload,
+                };
+                if (!res.ok) {
+                    throw data;
+                }
+                return data;
+            });
+            toast({
+                title: 'Sign-up success !',
+                description: '',
+                className: 'bg-green-300 text-slate-50',
+            });
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (error: any) {
+            toast({
+                title: 'Lỗi',
+                description:
+                    (error?.message as string) ||
+                    'Đã xảy ra lỗi không xác định.',
+                variant: 'destructive',
+            });
         }
     }
     return (
