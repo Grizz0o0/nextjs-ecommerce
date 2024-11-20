@@ -15,10 +15,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { LoginBodyType, LoginBody } from '@/schemaValidations/auth.schema';
 import envConfig from '@/config';
+import { useAppContext } from '@/app/AppProvider';
 
 export default function LoginForm() {
     const { toast } = useToast();
-
+    const { setSessionToken } = useAppContext();
     const form = useForm<LoginBodyType>({
         resolver: zodResolver(LoginBody),
         defaultValues: {
@@ -29,7 +30,7 @@ export default function LoginForm() {
 
     async function onSubmit(values: LoginBodyType) {
         try {
-            await fetch(
+            const result = await fetch(
                 `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/v1/api/shop/login`,
                 {
                     body: JSON.stringify(values),
@@ -55,6 +56,27 @@ export default function LoginForm() {
                 description: '',
                 className: 'bg-green-300 text-slate-50',
             });
+            const resultFormNextServer = await fetch('/api/auth', {
+                body: JSON.stringify(result),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                method: 'POST',
+            }).then(async (res) => {
+                const payload = await res.json();
+                const data = {
+                    status: res.status,
+                    payload,
+                };
+                if (!res.ok) {
+                    throw data;
+                }
+                return data;
+            });
+            setSessionToken(
+                resultFormNextServer?.payload?.metadata?.tokens?.accessToken
+            );
+            console.log(resultFormNextServer);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             const payload = error.payload as {
