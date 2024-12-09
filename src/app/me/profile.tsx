@@ -1,39 +1,29 @@
 'use client';
-import envConfig from '@/config';
-import { useEffect } from 'react';
-import { useAppContext } from '../AppProvider';
+import { useEffect, useState } from 'react';
+import accountApiRequest from '@/apiRequests/account';
+import { AccountResType } from '@/schemaValidations/account.schema';
+import { clientSessionToken } from '@/lib/http';
 
 function Profile() {
-    const { sessionToken } = useAppContext();
+    const [profileData, setProfileData] = useState<AccountResType>();
     useEffect(() => {
         const fetchRequest = async () => {
-            const result = await fetch(
-                `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/v1/api/shop/me`,
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-key': envConfig.NEXT_PUBLIC_X_API_KEY,
-                        'x-client-id': envConfig.NEXT_PUBLIC_X_CLIENT_ID,
-                        authorization: `${sessionToken}`,
-                    },
-                    method: 'GET',
-                }
-            ).then(async (res) => {
-                const payload = await res.json();
-                const data = {
-                    status: res.status,
-                    payload,
-                };
-                if (!res.ok) {
-                    throw data;
-                }
-                return data;
-            });
-            console.log(result);
+            const result = await accountApiRequest.me(
+                clientSessionToken.value,
+                clientSessionToken.user
+            );
+            setProfileData(result.payload);
         };
         fetchRequest();
-    }, [sessionToken]);
-    return <div>Profile</div>;
+    }, []);
+    return (
+        <div>
+            <h2>Profile</h2>
+            <p>name {profileData?.metadata.name}</p>
+            <p>email {profileData?.metadata.email}</p>
+            <p>rules {profileData?.metadata.rules}</p>
+        </div>
+    );
 }
 
 export default Profile;

@@ -18,11 +18,14 @@ import {
     RegisterBodyType,
     RegisterBody,
 } from '@/schemaValidations/auth.schema';
-import envConfig from '@/config';
+import authApiRequest from '@/apiRequests/auth';
+import { useRouter } from 'next/navigation';
+import { HttpError } from '@/lib/http';
+import { ErrorMapping, handleMappedError } from '@/lib/utils';
 
 export default function RegisterForm() {
     const { toast } = useToast();
-
+    const router = useRouter();
     const form = useForm<RegisterBodyType>({
         resolver: zodResolver(RegisterBody),
         defaultValues: {
@@ -35,41 +38,35 @@ export default function RegisterForm() {
 
     async function onSubmit(values: RegisterBodyType) {
         try {
-            await fetch(
-                `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/v1/api/shop/signup`,
-                {
-                    body: JSON.stringify(values),
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-key': envConfig.NEXT_PUBLIC_X_API_KEY,
-                    },
-                    method: 'POST',
-                }
-            ).then(async (res) => {
-                const payload = await res.json();
-                const data = {
-                    status: res.status,
-                    payload,
-                };
-                if (!res.ok) {
-                    throw data;
-                }
-                return data;
-            });
+            const result = await authApiRequest.register(values);
             toast({
                 title: 'Sign-up success !',
                 description: '',
+                duration: 500,
                 className: 'bg-green-300 text-slate-50',
             });
+            await authApiRequest.auth({
+                sessionToken: result.payload.metadata.tokens.accessToken,
+                userId: result.payload.metadata.shop._id,
+            });
+
+            router.push('/me');
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            toast({
-                title: 'Lỗi',
-                description:
-                    (error?.message as string) ||
-                    'Đã xảy ra lỗi không xác định.',
-                variant: 'destructive',
-            });
+            if (error instanceof HttpError) {
+                const registerErrorMapping: ErrorMapping = {
+                    403: {
+                        name: 'email',
+                        message:
+                            'This email is not registered. Please check and try again.',
+                    },
+                };
+                handleMappedError({
+                    error,
+                    setError: form.setError,
+                    errorMapping: registerErrorMapping,
+                });
+            }
         }
     }
     return (

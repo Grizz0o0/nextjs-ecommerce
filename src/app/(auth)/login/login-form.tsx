@@ -14,12 +14,14 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { LoginBodyType, LoginBody } from '@/schemaValidations/auth.schema';
-import envConfig from '@/config';
-import { useAppContext } from '@/app/AppProvider';
+import authApiRequest from '@/apiRequests/auth';
+import { useRouter } from 'next/navigation';
+import { handleMappedError } from '@/lib/utils';
+import { HttpError } from '@/lib/http';
 
 export default function LoginForm() {
     const { toast } = useToast();
-    const { setSessionToken } = useAppContext();
+    const router = useRouter();
     const form = useForm<LoginBodyType>({
         resolver: zodResolver(LoginBody),
         defaultValues: {
@@ -30,73 +32,26 @@ export default function LoginForm() {
 
     async function onSubmit(values: LoginBodyType) {
         try {
-            const result = await fetch(
-                `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/v1/api/shop/login`,
-                {
-                    body: JSON.stringify(values),
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-key': envConfig.NEXT_PUBLIC_X_API_KEY,
-                    },
-                    method: 'POST',
-                }
-            ).then(async (res) => {
-                const payload = await res.json();
-                const data = {
-                    status: res.status,
-                    payload,
-                };
-                if (!res.ok) {
-                    throw data;
-                }
-                return data;
-            });
+            const result = await authApiRequest.login(values);
             toast({
                 title: 'Login success !',
                 description: '',
                 className: 'bg-green-300 text-slate-50',
+                duration: 500,
             });
-            const resultFormNextServer = await fetch('/api/auth', {
-                body: JSON.stringify(result),
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                method: 'POST',
-            }).then(async (res) => {
-                const payload = await res.json();
-                const data = {
-                    status: res.status,
-                    payload,
-                };
-                if (!res.ok) {
-                    throw data;
-                }
-                return data;
+
+            await authApiRequest.auth({
+                sessionToken: result.payload.metadata.tokens.accessToken,
+                userId: result.payload.metadata.shop._id,
             });
-            setSessionToken(
-                resultFormNextServer?.payload?.metadata?.tokens?.accessToken
-            );
-            console.log(resultFormNextServer);
+
+            router.push('/me');
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            const payload = error.payload as {
-                code: number;
-                message: string;
-                stack: string;
-                status: string;
-            };
-
-            if (payload?.status === 'error' && payload?.code === 401) {
-                form.setError('password', {
-                    type: 'server',
-                    message: 'Invalid email or password. Please try again!',
-                });
-            } else {
-                toast({
-                    title: 'Lỗi',
-                    description:
-                        error?.message || 'Đã xảy ra lỗi không xác định.',
-                    variant: 'destructive',
+            if (error instanceof HttpError) {
+                handleMappedError({
+                    error,
+                    setError: form.setError,
                 });
             }
         }
