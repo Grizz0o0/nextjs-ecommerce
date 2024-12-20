@@ -21,7 +21,7 @@ import {
 import authApiRequest from '@/apiRequests/auth';
 import { useRouter } from 'next/navigation';
 import { HttpError } from '@/lib/http';
-import { ErrorMapping, handleMappedError } from '@/lib/utils';
+import { ErrorMapping, handleClientError } from '@/lib/utils';
 
 export default function RegisterForm() {
     const { toast } = useToast();
@@ -61,7 +61,7 @@ export default function RegisterForm() {
                             'This email is not registered. Please check and try again.',
                     },
                 };
-                handleMappedError({
+                handleClientError({
                     error,
                     setError: form.setError,
                     errorMapping: registerErrorMapping,

@@ -3,7 +3,8 @@ import { twMerge } from 'tailwind-merge';
 import { HttpError } from './http';
 import { UseFormSetError } from 'react-hook-form';
 import { toast } from '@/hooks/use-toast';
-
+import jwt from 'jsonwebtoken';
+import { redirect } from 'next/navigation';
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
@@ -24,7 +25,16 @@ const LoginErrorMapping: ErrorMapping = {
     },
 };
 
-export function handleMappedError({
+export function handleServerError(error: HttpError) {
+    if (error.status === 401) {
+        // Lỗi 401 - Unauthorized
+        redirect(error.message); //Redirect sang trang login
+    } else {
+        console.error('Server error:', error);
+    }
+}
+
+export function handleClientError({
     error,
     setError,
     errorMapping = LoginErrorMapping,
@@ -74,9 +84,12 @@ export function handleErrorApi({
         });
     }
 }
-
 export const isClient = () => typeof window !== 'undefined';
 
 export const normalizePath = (path: string) => {
     return path.startsWith('/') ? path.slice(1) : path;
+};
+
+export const decodeJWT = <Payload>(token: string) => {
+    return jwt.decode(token) as Payload;
 };

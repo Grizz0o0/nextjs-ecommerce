@@ -1,13 +1,14 @@
 import { cookies } from 'next/headers';
 import Profile from './profile';
 import accountApiRequest from '@/apiRequests/account';
-import { handleMappedError } from '@/lib/utils';
+import { handleServerError } from '@/lib/utils';
 import { HttpError } from '@/lib/http';
 
 async function MyProfile() {
     const cookieStore = await cookies();
     const sessionToken = cookieStore.get('sessionToken');
     const userId = cookieStore.get('userId');
+
     try {
         const result = await accountApiRequest.me(
             sessionToken?.value ?? '',
@@ -21,7 +22,7 @@ async function MyProfile() {
             </div>
         );
     } catch (error) {
-        if (error instanceof HttpError) handleMappedError({ error });
+        if (error instanceof HttpError) handleServerError(error);
     }
 }
 

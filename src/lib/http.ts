@@ -6,6 +6,7 @@ type CustomOptions = Omit<RequestInit, 'method'> & {
     baseUrl?: string | undefined;
 };
 
+const AUTHENTICATION_STATUS = 401;
 export class HttpError extends Error {
     status: number;
 
@@ -42,6 +43,7 @@ class SessionToken {
 }
 
 export const clientSessionToken = new SessionToken();
+let clientLogoutRequest: null | Promise<any> = null;
 
 const request = async <Response>(
     method: 'GET' | 'POST' | 'PUT' | 'DELETE',
@@ -82,12 +84,40 @@ const request = async <Response>(
     };
 
     if (!res.ok) {
-        const errorPayload = payload as HttpError;
-        throw new HttpError({
-            status: res.status,
-            message: errorPayload.message || 'Unknown error occurred',
-        });
+        if (res.status === AUTHENTICATION_STATUS) {
+            if (typeof window !== 'undefined') {
+                if (!clientLogoutRequest) {
+                    clientLogoutRequest = fetch('/api/auth/logout', {
+                        method: 'POST',
+                        body: JSON.stringify({ force: true }),
+                        headers: {
+                            ...baseHeaders,
+                        },
+                    });
+                    await clientLogoutRequest;
+                    clientSessionToken.value = '';
+                    clientSessionToken.user = '';
+                    location.href = '/login'; // Redirect on client-side
+                }
+            } else {
+                const sessionToken =
+                    (options?.headers as any)?.authorization || '';
+                console.log(sessionToken);
+
+                throw new HttpError({
+                    status: AUTHENTICATION_STATUS,
+                    message: `/logout?sessionToken=${sessionToken}`,
+                });
+            }
+        } else {
+            const errorPayload = payload as HttpError;
+            throw new HttpError({
+                status: res.status,
+                message: errorPayload.message || 'Unknown error occurred',
+            });
+        }
     }
+
     if (isClient()) {
         if ('v1/api/shop/login'.includes(normalizePath(url))) {
             clientSessionToken.value = (
@@ -105,7 +135,7 @@ const request = async <Response>(
             ).metadata.shop._id;
         } else if ('v1/api/shop/logout'.includes(normalizePath(url))) {
             clientSessionToken.value = '';
-            clientSessionToken.value = '';
+            clientSessionToken.user = '';
         }
     }
 

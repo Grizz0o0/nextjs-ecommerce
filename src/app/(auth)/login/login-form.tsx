@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { LoginBodyType, LoginBody } from '@/schemaValidations/auth.schema';
 import authApiRequest from '@/apiRequests/auth';
 import { useRouter } from 'next/navigation';
-import { handleMappedError } from '@/lib/utils';
+import { handleClientError } from '@/lib/utils';
 import { HttpError } from '@/lib/http';
 
 export default function LoginForm() {
@@ -49,7 +49,7 @@ export default function LoginForm() {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             if (error instanceof HttpError) {
-                handleMappedError({
+                handleClientError({
                     error,
                     setError: form.setError,
                 });

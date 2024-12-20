@@ -3,7 +3,7 @@
 import authApiRequest from '@/apiRequests/auth';
 import { Button } from '@/components/ui/button';
 import { HttpError } from '@/lib/http';
-import { handleMappedError } from '@/lib/utils';
+import { handleClientError } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 export default function ButtonLogout() {
     const router = useRouter();
@@ -13,7 +13,7 @@ export default function ButtonLogout() {
             router.push('/login');
         } catch (error) {
             if (error instanceof HttpError) {
-                handleMappedError({
+                handleClientError({
                     error,
                 });
             }
