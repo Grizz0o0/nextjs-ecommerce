@@ -13,25 +13,27 @@ export async function POST(request: Request) {
                 status: 200,
                 headers: {
                     'Set-Cookie': [
-                        `sessionToken=; Path=/; HttpOnly; Secure; Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
-                        `userId=; Path=/; HttpOnly; Secure; Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
+                        `accessToken=; Path=/; HttpOnly; Secure; Max-Age=0`,
+                        `refreshToken=; Path=/; HttpOnly; Secure; Max-Age=0`,
+                        `userId=; Path=/; HttpOnly; Secure; Max-Age=0`,
                     ].join(', '),
                 },
             }
         );
     }
     const cookieStore = await cookies();
-    const sessionToken = cookieStore.get('sessionToken')?.value || '';
+    const accessToken = cookieStore.get('accessToken')?.value || '';
+    const refreshToken = cookieStore.get('refreshToken')?.value || '';
     const userId = cookieStore.get('userId')?.value || '';
-    if (!sessionToken || !userId) {
+    if (!accessToken || !refreshToken || !userId) {
         return Response.json(
-            { error: 'Missing access token or user ID' },
+            { error: 'Missing token or user ID' },
             { status: 401 }
         );
     }
     try {
         const result = await authApiRequest.logoutFromNextServerToServer(
-            sessionToken,
+            accessToken,
             userId
         );
 
@@ -39,8 +41,9 @@ export async function POST(request: Request) {
             status: 200,
             headers: {
                 'Set-Cookie': [
-                    `sessionToken=; Path=/; HttpOnly; Secure; Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
-                    `userId=; Path=/; HttpOnly; Secure; Expires=Thu, 01 Jan 1970 00:00:00 GMT`,
+                    `accessToken=; Path=/; HttpOnly; Secure; Max-Age=0`,
+                    `refreshToken=; Path=/; HttpOnly; Secure; Max-Age=0`,
+                    `userId=; Path=/; HttpOnly; Secure; Max-Age=0`,
                 ].join(', '),
             },
         });

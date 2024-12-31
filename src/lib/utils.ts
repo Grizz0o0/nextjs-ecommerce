@@ -7,8 +7,15 @@ import jwt from 'jsonwebtoken';
 import { redirect } from 'next/navigation';
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
+    return undefined;
 }
 
+type PayloadJWT = {
+    userId: string;
+    email: string;
+    iat: number;
+    exp: number;
+};
 export type ErrorMapping = {
     [key: number]: { name: string; message: string } | undefined;
 };
@@ -92,4 +99,16 @@ export const normalizePath = (path: string) => {
 
 export const decodeJWT = <Payload>(token: string) => {
     return jwt.decode(token) as Payload;
+};
+export const getExpireAt = (token: string): Date | undefined => {
+    try {
+        const tokenPayload = decodeJWT<PayloadJWT>(token);
+        if (!tokenPayload?.exp) {
+            throw new Error('Invalid token payload: missing exp');
+        }
+
+        return new Date(tokenPayload.exp * 1000); // chuyển từ giây sang mili giây
+    } catch (error) {
+        console.error('Failed to decode token:', error);
+    }
 };

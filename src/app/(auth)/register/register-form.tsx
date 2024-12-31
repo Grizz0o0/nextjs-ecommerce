@@ -46,7 +46,8 @@ export default function RegisterForm() {
                 className: 'bg-green-300 text-slate-50',
             });
             await authApiRequest.auth({
-                sessionToken: result.payload.metadata.tokens.accessToken,
+                accessToken: result.payload.metadata.tokens.accessToken,
+                refreshToken: result.payload.metadata.tokens.refreshToken,
                 userId: result.payload.metadata.shop._id,
             });
 

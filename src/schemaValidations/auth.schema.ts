@@ -67,10 +67,23 @@ export const LoginRes = z.object({
     }),
 });
 
+export const RefreshTokenRes = z.object({
+    message: z.string(),
+    statusCode: z.number(),
+    metadata: z.object({
+        user: z.object({
+            userId: z.string(),
+            email: z.string(),
+            iat: z.number(),
+            exp: z.number(),
+        }),
+        tokens: z.object({
+            accessToken: z.string(),
+            refreshToken: z.string(),
+        }),
+    }),
+});
+
 export type LoginResType = z.TypeOf<typeof LoginRes>;
-export const SlideSessionBody = z.object({}).strict();
 
-export type SlideSessionBodyType = z.TypeOf<typeof SlideSessionBody>;
-export const SlideSessionRes = RegisterRes;
-
-export type SlideSessionResType = z.TypeOf<typeof SlideSessionRes>;
+export type SlideSessionResType = z.TypeOf<typeof RefreshTokenRes>;

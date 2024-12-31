@@ -6,12 +6,12 @@ import { HttpError } from '@/lib/http';
 
 async function MyProfile() {
     const cookieStore = await cookies();
-    const sessionToken = cookieStore.get('sessionToken');
+    const accessToken = cookieStore.get('accessToken');
     const userId = cookieStore.get('userId');
 
     try {
         const result = await accountApiRequest.me(
-            sessionToken?.value ?? '',
+            accessToken?.value ?? '',
             userId?.value ?? ''
         );
 

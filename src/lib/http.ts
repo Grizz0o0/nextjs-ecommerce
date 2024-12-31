@@ -16,33 +16,43 @@ export class HttpError extends Error {
     }
 }
 
-class SessionToken {
-    private token = '';
-    private userId = '';
+class Token {
+    private _accessToken = '';
+    private _refreshToken = '';
+    private _userId = '';
 
-    get value() {
-        return this.token;
+    get accessToken() {
+        return this._accessToken;
     }
-    set value(token: string) {
-        // Nếu gọi method này ở server thì sẽ bị lỗi
+    set accessToken(accessToken: string) {
         if (!isClient()) {
-            throw new Error('Cannot set token on server side');
+            throw new Error('Cannot set accessToken on server side');
         }
-        this.token = token;
+        this._accessToken = accessToken;
     }
 
-    get user() {
-        return this.userId;
+    get refreshToken() {
+        return this._refreshToken;
     }
-    set user(userId: string) {
+    set refreshToken(refreshToken: string) {
+        if (!isClient()) {
+            throw new Error('Cannot set refreshToken on server side');
+        }
+        this._refreshToken = refreshToken;
+    }
+
+    get userId() {
+        return this._userId;
+    }
+    set userId(userId: string) {
         if (!isClient()) {
             throw new Error('Cannot set userId on server side');
         }
-        this.userId = userId;
+        this._userId = userId;
     }
 }
 
-export const clientSessionToken = new SessionToken();
+export const clientToken = new Token();
 let clientLogoutRequest: null | Promise<any> = null;
 
 const request = async <Response>(
@@ -95,18 +105,19 @@ const request = async <Response>(
                         },
                     });
                     await clientLogoutRequest;
-                    clientSessionToken.value = '';
-                    clientSessionToken.user = '';
+                    clientToken.accessToken = '';
+                    clientToken.refreshToken = '';
+                    clientToken.userId = '';
                     location.href = '/login'; // Redirect on client-side
                 }
             } else {
-                const sessionToken =
+                const accessToken =
                     (options?.headers as any)?.authorization || '';
-                console.log(sessionToken);
+                console.log(accessToken);
 
                 throw new HttpError({
                     status: AUTHENTICATION_STATUS,
-                    message: `/logout?sessionToken=${sessionToken}`,
+                    message: `/logout?accessToken=${accessToken}`,
                 });
             }
         } else {
@@ -120,22 +131,25 @@ const request = async <Response>(
 
     if (isClient()) {
         if ('v1/api/shop/login'.includes(normalizePath(url))) {
-            clientSessionToken.value = (
+            clientToken.accessToken = (
                 payload as LoginResType
             ).metadata.tokens.accessToken;
-            clientSessionToken.user = (
+            clientToken.refreshToken = (
                 payload as LoginResType
-            ).metadata.shop._id;
+            ).metadata.tokens.refreshToken;
+            clientToken.userId = (payload as LoginResType).metadata.shop._id;
         } else if ('v1/api/shop/signup'.includes(normalizePath(url))) {
-            clientSessionToken.value = (
+            clientToken.accessToken = (
                 payload as RegisterResType
             ).metadata.tokens.accessToken;
-            clientSessionToken.user = (
+            clientToken.refreshToken = (
                 payload as RegisterResType
-            ).metadata.shop._id;
+            ).metadata.tokens.refreshToken;
+            clientToken.userId = (payload as RegisterResType).metadata.shop._id;
         } else if ('v1/api/shop/logout'.includes(normalizePath(url))) {
-            clientSessionToken.value = '';
-            clientSessionToken.user = '';
+            clientToken.accessToken = '';
+            clientToken.refreshToken = '';
+            clientToken.userId = '';
         }
     }
 

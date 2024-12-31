@@ -5,6 +5,7 @@ import {
     LoginResType,
     RegisterBodyType,
     RegisterResType,
+    SlideSessionResType,
 } from '@/schemaValidations/auth.schema';
 
 const authApiRequest = {
@@ -22,10 +23,13 @@ const authApiRequest = {
             },
         }),
 
-    auth: (body: { sessionToken: string; userId: string }) =>
-        http.post('api/auth', body, { baseUrl: '' }),
+    auth: (body: {
+        accessToken: string;
+        refreshToken: string;
+        userId: string;
+    }) => http.post('api/auth', body, { baseUrl: '' }),
 
-    logoutFromNextServerToServer: (sessionToken: string, userId: string) =>
+    logoutFromNextServerToServer: (accessToken: string, userId: string) =>
         http.post(
             '/v1/api/shop/logout',
             {},
@@ -33,13 +37,29 @@ const authApiRequest = {
                 headers: {
                     'x-api-key': envConfig.NEXT_PUBLIC_X_API_KEY,
                     'x-client-id': `${userId}`,
-                    authorization: `${sessionToken}`,
+                    authorization: `${accessToken}`,
                 },
             }
         ),
 
     logoutFromNextClientToNextServer: (force?: boolean | undefined) =>
         http.post('/api/auth/logout', { force }, { baseUrl: '' }),
+
+    slideTokenNextServerToServer: (refreshToken: string, userId: string) =>
+        http.post<SlideSessionResType>(
+            '/v1/api/shop/handlerRefreshToken',
+            {},
+            {
+                headers: {
+                    'x-api-key': envConfig.NEXT_PUBLIC_X_API_KEY,
+                    'x-client-id': `${userId}`,
+                    'x-rtoken-id': `${refreshToken}`,
+                },
+            }
+        ),
+
+    slideTokenNextClientToNextServer: () =>
+        http.post('/api/auth/slideToken', {}, { baseUrl: '' }),
 };
 
 export default authApiRequest;

@@ -1,23 +1,23 @@
 'use client';
 
 import authApiRequest from '@/apiRequests/auth';
-import { clientSessionToken } from '@/lib/http';
+import { clientToken } from '@/lib/http';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 
 function Logout() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const sessionToken = searchParams.get('sessionToken');
+    const accessToken = searchParams.get('accessToken');
     useEffect(() => {
         const handleLogout = async () => {
-            if (sessionToken === clientSessionToken.value) {
+            if (accessToken === clientToken.accessToken) {
                 await authApiRequest.logoutFromNextClientToNextServer(true);
                 router.push('/login');
             }
         };
         handleLogout();
-    }, [router, sessionToken]);
+    }, [router, accessToken]);
     return <p>Logout</p>;
 }
 

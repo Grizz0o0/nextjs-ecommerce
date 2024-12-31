@@ -7,6 +7,7 @@ import { Metadata } from 'next';
 import Header from '@/components/header';
 import AppProvider from './AppProvider';
 import { cookies } from 'next/headers';
+import SlideSession from '@/components/slide-token';
 
 const roboto = Roboto({
     subsets: ['vietnamese'],
@@ -21,7 +22,8 @@ export const metadata: Metadata = {
 async function getUserCookies() {
     const cookieStore = await cookies();
     return {
-        sessionToken: (await cookieStore.get('sessionToken')?.value) || '',
+        accessToken: (await cookieStore.get('accessToken')?.value) || '',
+        refreshToken: (await cookieStore.get('refreshToken')?.value) || '',
         userId: (await cookieStore.get('userId')?.value) || '',
     };
 }
@@ -31,7 +33,7 @@ export default async function RootLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const { sessionToken, userId } = await getUserCookies();
+    const { accessToken, refreshToken, userId } = await getUserCookies();
     return (
         <html lang="en" suppressHydrationWarning>
             <head />
@@ -44,11 +46,13 @@ export default async function RootLayout({
                 >
                     <Header />
                     <AppProvider
-                        initialSessionToken={sessionToken}
+                        initialAccessToken={accessToken}
+                        initialRefreshToken={refreshToken}
                         initialUserId={userId}
                     >
                         <main>{children}</main>
                     </AppProvider>
+                    {accessToken && <SlideSession accessToken={accessToken} />}
                     <Toaster />
                 </ThemeProvider>
             </body>

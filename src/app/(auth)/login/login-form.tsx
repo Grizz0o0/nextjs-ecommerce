@@ -41,7 +41,8 @@ export default function LoginForm() {
             });
 
             await authApiRequest.auth({
-                sessionToken: result.payload.metadata.tokens.accessToken,
+                accessToken: result.payload.metadata.tokens.accessToken,
+                refreshToken: result.payload.metadata.tokens.refreshToken,
                 userId: result.payload.metadata.shop._id,
             });
 
