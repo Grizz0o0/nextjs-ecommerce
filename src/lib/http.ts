@@ -56,13 +56,17 @@ export const clientToken = new Token();
 let clientLogoutRequest: null | Promise<any> = null;
 
 const request = async <Response>(
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
     url: string,
     options?: CustomOptions | undefined
 ) => {
     const body = options?.body ? JSON.stringify(options.body) : undefined;
     const baseHeaders = {
         'Content-Type': 'application/json',
+        authorization: clientToken.accessToken
+            ? `${clientToken.accessToken}`
+            : '',
+        'x-client-id': clientToken.userId || '',
     };
 
     // Nếu không truyền baseUrl (hoặc baseUrl = undefined) thì lấy từ envConfig.NEXT_PUBLIC_API_ENDPOINT
@@ -170,12 +174,12 @@ const http = {
     ) {
         return request<Response>('POST', url, { ...options, body });
     },
-    put<Response>(
+    patch<Response>(
         url: string,
         body: any,
         options?: Omit<CustomOptions, 'body'> | undefined
     ) {
-        return request<Response>('PUT', url, { ...options, body });
+        return request<Response>('PATCH', url, { ...options, body });
     },
     delete<Response>(
         url: string,

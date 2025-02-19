@@ -20,7 +20,7 @@ export const RegisterBody = z
         }
     });
 
-export type RegisterBodyType = z.TypeOf<typeof RegisterBody>;
+export type RegisterBodyType = z.infer<typeof RegisterBody>;
 
 export const RegisterRes = z.object({
     message: z.string(),
@@ -41,7 +41,7 @@ export const RegisterRes = z.object({
     statusCode: z.number(),
 });
 
-export type RegisterResType = z.TypeOf<typeof RegisterRes>;
+export type RegisterResType = z.infer<typeof RegisterRes>;
 
 export const LoginBody = z
     .object({
@@ -50,7 +50,7 @@ export const LoginBody = z
     })
     .strict();
 
-export type LoginBodyType = z.TypeOf<typeof LoginBody>;
+export type LoginBodyType = z.infer<typeof LoginBody>;
 
 export const LoginRes = z.object({
     message: z.string(),
@@ -84,6 +84,6 @@ export const RefreshTokenRes = z.object({
     }),
 });
 
-export type LoginResType = z.TypeOf<typeof LoginRes>;
+export type LoginResType = z.infer<typeof LoginRes>;
 
-export type SlideSessionResType = z.TypeOf<typeof RefreshTokenRes>;
+export type SlideSessionResType = z.infer<typeof RefreshTokenRes>;
