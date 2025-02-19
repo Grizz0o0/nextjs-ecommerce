@@ -32,6 +32,12 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 
+const defaultAttributes = {
+    Electronics: { manufacturer: '', model: '', color: '' },
+    Clothing: { brand: '', size: '', material: '' },
+    Furniture: { manufacturer: '', model: '', color: '' },
+};
+
 type Product = GetProductResType['metadata'];
 export default function ProductForm({ product }: { product?: Product }) {
     const { toast } = useToast();
@@ -48,6 +54,13 @@ export default function ProductForm({ product }: { product?: Product }) {
             product_attributes: product?.product_attributes || {},
         },
     });
+
+    const handleTypeChange = (
+        value: 'Electronics' | 'Clothing' | 'Furniture'
+    ) => {
+        form.setValue('product_type', value);
+        form.setValue('product_attributes', defaultAttributes[value] || {});
+    };
 
     const createProduct = async (values: CreateProductBodyType) => {
         try {
@@ -98,6 +111,7 @@ export default function ProductForm({ product }: { product?: Product }) {
             await createProduct(values as CreateProductBodyType);
         }
     }
+
     return (
         <Form {...form}>
             <form
@@ -161,9 +175,7 @@ export default function ProductForm({ product }: { product?: Product }) {
                             <FormLabel>product_type</FormLabel>
                             <FormControl>
                                 <Select
-                                    onValueChange={(value) =>
-                                        field.onChange(value)
-                                    }
+                                    onValueChange={handleTypeChange}
                                     defaultValue={field.value}
                                 >
                                     <SelectTrigger className="w-[180px]">
@@ -228,28 +240,16 @@ export default function ProductForm({ product }: { product?: Product }) {
                         <FormItem>
                             <FormLabel>Product Attributes</FormLabel>
                             <FormControl>
-                                {/* Sử dụng textarea để nhập JSON hoặc một giao diện nhập liệu phức tạp hơn */}
                                 <Textarea
                                     placeholder="Enter JSON object for attributes"
-                                    value={
-                                        typeof field.value === 'object'
-                                            ? JSON.stringify(
-                                                  field.value,
-                                                  null,
-                                                  2
-                                              )
-                                            : ''
-                                    }
+                                    value={JSON.stringify(field.value, null, 2)}
                                     onChange={(e) => {
                                         try {
                                             const parsedValue = JSON.parse(
                                                 e.target.value
                                             );
-                                            field.onChange(parsedValue); // Cập nhật giá trị của object
-                                        } catch {
-                                            // Bạn có thể thêm thông báo lỗi nếu JSON không hợp lệ
-                                            field.onChange(e.target.value); // Nếu không parse được, để giá trị là chuỗi
-                                        }
+                                            field.onChange(parsedValue);
+                                        } catch {}
                                     }}
                                     rows={5}
                                 />
@@ -258,15 +258,9 @@ export default function ProductForm({ product }: { product?: Product }) {
                         </FormItem>
                     )}
                 />
-                {product ? (
-                    <Button type="submit" className="!mt-8 w-full">
-                        Update
-                    </Button>
-                ) : (
-                    <Button type="submit" className="!mt-8 w-full">
-                        Add
-                    </Button>
-                )}
+                <Button type="submit" className="mt-8 w-full">
+                    {product ? 'Update' : 'Add'}
+                </Button>
             </form>
         </Form>
     );

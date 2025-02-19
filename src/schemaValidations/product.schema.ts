@@ -97,6 +97,7 @@ export const GetAllProductRes = z.object({
             product_name: z.string(),
             product_thumb: z.string(),
             product_price: z.number(),
+            product_type: z.enum(['Electronics', 'Clothing', 'Furniture']),
             product_shop: z.string(),
         })
     ),
@@ -126,3 +127,14 @@ export const UpdateProductRes = z.object({
     ),
 });
 export type UpdateProductResType = z.infer<typeof UpdateProductRes>;
+
+export const DeleteProductRes = z.object({
+    message: z.string(),
+    statusCode: z.number(),
+    metadata: z.array(
+        ProductBase.extend({
+            product_shop: z.string(),
+        })
+    ),
+});
+export type DeleteProductResType = z.infer<typeof DeleteProductRes>;

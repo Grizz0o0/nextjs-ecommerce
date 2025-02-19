@@ -3,6 +3,7 @@ import http from '@/lib/http';
 import {
     CreateProductBodyType,
     CreateProductResType,
+    DeleteProductResType,
     GetAllProductResType,
     GetProductListResType,
     GetProductResType,
@@ -32,6 +33,17 @@ const productApiRequest = {
                 'x-api-key': envConfig.NEXT_PUBLIC_X_API_KEY,
             },
         }),
+
+    deleteProduct: (productId: string, body: { product_type: string }) =>
+        http.delete<DeleteProductResType>(
+            `/v1/api/product/${productId}`,
+            body,
+            {
+                headers: {
+                    'x-api-key': envConfig.NEXT_PUBLIC_X_API_KEY,
+                },
+            }
+        ),
 
     getProductById: (productId: string) =>
         http.get<GetProductResType>(`/v1/api/product/${productId}`, {

@@ -2,6 +2,7 @@ import productApiRequest from '@/apiRequests/product';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
+import DeleteButton from './_component/delete-button';
 
 async function Product() {
     const result = await productApiRequest.getProductList();
@@ -17,6 +18,7 @@ async function Product() {
                         alt={product.product_name}
                         width={190}
                         height={190}
+                        priority
                     />
                     <div className="info p-2">
                         <h2 className="line-clamp-2 min-h-[3rem]">
@@ -32,11 +34,7 @@ async function Product() {
                                 Edit
                             </Button>
                         </Link>
-                        <Link href={`/}`}>
-                            <Button className="w-full bg-red-500  hover:bg-red-400">
-                                Delete
-                            </Button>
-                        </Link>
+                        <DeleteButton product={product} />
                     </div>
                 </div>
             ))}
